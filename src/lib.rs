@@ -8,25 +8,25 @@ where
 }
 
 macro_rules! create_memo_impl {
-    (<$ident_arg1:ident, $ident_arg2:ident>) => {
-        impl<$ident_arg1, $ident_arg2, Return> Memo<fn($ident_arg1, $ident_arg2) -> Return, Return>
+    ($earg1:ident => $iarg1:ident; $earg2:ident => $iarg2:ident) => {
+        impl<$iarg1, $iarg2, Return> Memo<fn($iarg1, $iarg2) -> Return, Return>
         where
-            $ident_arg1: Eq,
-            $ident_arg2: Eq,
+            $iarg1: Eq,
+            $iarg2: Eq,
             Return: Clone,
         {
-            pub fn new(f: fn($ident_arg1, $ident_arg2) -> Return) -> Self {
+            pub fn new(f: fn($iarg1, $iarg2) -> Return) -> Self {
                 Self {
                     get_value: f,
                     value: None,
                 }
             }
 
-            pub fn run(&mut self, arg1: $ident_arg1, arg2: $ident_arg2) -> Option<Return> {
+            pub fn run(&mut self, $earg1: $iarg1, $earg2: $iarg2) -> Option<Return> {
                 match self.value {
                     Some(_) => self.value.to_owned(),
                     None => {
-                        let value = Some((self.get_value)(arg1, arg2));
+                        let value = Some((self.get_value)($earg1, $earg2));
                         self.value = value;
                         self.value.to_owned()
                     }
@@ -36,7 +36,7 @@ macro_rules! create_memo_impl {
     };
 }
 
-create_memo_impl!(<Arg1, Arg2>);
+create_memo_impl!(arg1 => Arg1; arg2 => Arg2);
 
 #[cfg(test)]
 mod tests {
