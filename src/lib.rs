@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct Memo<Function, Return>
+pub struct Memo<Key, Function, Return>
 where
     Return: Clone,
 {
-    map: HashMap<i32, Return>,
+    map: HashMap<Key, Return>,
     get_value: Function,
 }
 
@@ -16,7 +16,7 @@ macro_rules! create_memo_for {
             fn run(&mut self, $($let: $type),*) -> Return;
         }
 
-        impl <$($type),*, Return> $trait_name<$($type),*, Return> for Memo<fn($($type),*) -> Return, Return>
+        impl <$($type),*, Return> $trait_name<$($type),*, Return> for Memo<i32, fn($($type),*) -> Return, Return>
         where
             $($type: Eq),*,
             Return: Clone,
@@ -54,24 +54,24 @@ mod tests {
 
     #[test]
     fn it_memoizes_functions_for_i32() {
-        // let mut f0 = <Memo<_, _> as Memo0<_>>::new(|| 10);
+        // let mut f0 = <Memo<_, _,_> as Memo0<_>>::new(|| 10);
         // assert_eq!(f0.run(10), Some(10));
 
-        let mut f1 = <Memo<_, _> as Memo1<_, _>>::new(|a| a);
+        let mut f1 = <Memo<_, _, _> as Memo1<_, _>>::new(|a| a);
         assert_eq!(f1.run(10), 10);
         assert_eq!(f1.run(20), 20);
 
-        let mut f2 = <Memo<_, _> as Memo2<_, _, _>>::new(|a, b| a * b);
+        let mut f2 = <Memo<_, _, _> as Memo2<_, _, _>>::new(|a, b| a * b);
         assert_eq!(f2.run(10, 10), 100);
 
-        let mut f3 = <Memo<_, _> as Memo3<_, _, _, _>>::new(|a, b, c| a * b * c);
+        let mut f3 = <Memo<_, _, _> as Memo3<_, _, _, _>>::new(|a, b, c| a * b * c);
         assert_eq!(f3.run(10, 10, 10), 1_000);
 
-        let mut f4 = <Memo<_, _> as Memo4<_, _, _, _, _>>::new(|a, b, c, d| a * b * c * d);
+        let mut f4 = <Memo<_, _, _> as Memo4<_, _, _, _, _>>::new(|a, b, c, d| a * b * c * d);
         assert_eq!(f4.run(10, 10, 10, 10), 10_000);
 
         let mut f5 =
-            <Memo<_, _> as Memo5<_, _, _, _, _, _>>::new(|a, b, c, d, e| a * b * c * d * e);
+            <Memo<_, _, _> as Memo5<_, _, _, _, _, _>>::new(|a, b, c, d, e| a * b * c * d * e);
         assert_eq!(f5.run(10, 10, 10, 10, 10), 100_000);
     }
 }
