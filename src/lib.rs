@@ -18,7 +18,7 @@ macro_rules! create_memo_for {
 
         impl <'a, $($type),*, Return> $trait_name<'a, $($type),*, Return> for Memo<'a, ($(&'a $type),*), fn($($type),*) -> Return, Return>
         where
-            $($type: 'a + Eq + Hash + Clone),*,
+            $($type: 'a + Eq + Hash + Clone + Copy),*,
             Return: 'a + Clone + Copy,
         {
             fn new(f: fn($($type),*) -> Return) -> Self {
@@ -34,7 +34,7 @@ macro_rules! create_memo_for {
                 match self.map.get(&key) {
                     Some(value) => **value,
                     None => {
-                        let value = (self.get_value)($($let.clone()),*);
+                        let value = (self.get_value)($(*$let),*);
                         // self.map.insert(key, &value);
                         value
                     }
