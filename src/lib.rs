@@ -8,21 +8,21 @@ where
 }
 
 macro_rules! create_memo_impl {
-    () => {
-        impl<Arg1, Arg2, Return> Memo<fn(Arg1, Arg2) -> Return, Return>
+    (<$ident_arg1:ident, $ident_arg2:ident>) => {
+        impl<$ident_arg1, $ident_arg2, Return> Memo<fn($ident_arg1, $ident_arg2) -> Return, Return>
         where
-            Arg1: Eq,
-            Arg2: Eq,
+            $ident_arg1: Eq,
+            $ident_arg2: Eq,
             Return: Clone,
         {
-            pub fn new(f: fn(Arg1, Arg2) -> Return) -> Self {
+            pub fn new(f: fn($ident_arg1, $ident_arg2) -> Return) -> Self {
                 Self {
                     get_value: f,
                     value: None,
                 }
             }
 
-            pub fn run(&mut self, arg1: Arg1, arg2: Arg2) -> Option<Return> {
+            pub fn run(&mut self, arg1: $ident_arg1, arg2: $ident_arg2) -> Option<Return> {
                 match self.value {
                     Some(_) => self.value.to_owned(),
                     None => {
@@ -36,7 +36,7 @@ macro_rules! create_memo_impl {
     };
 }
 
-create_memo_impl!();
+create_memo_impl!(<Arg1, Arg2>);
 
 #[cfg(test)]
 mod tests {
