@@ -6,12 +6,40 @@ where
     Return: Copy,
 {
     map: Option<HashMap<Key, Box<Return>>>,
+    value: Option<Return>,
     get_value: Function,
 }
 
 macro_rules! create_memo_for {
     ($trait_name:ident) => {
-        
+        trait $trait_name<'a, Return> {
+            fn new(f: fn() -> Return) -> Self;
+            fn run(&mut self) -> Return;
+        }
+
+        impl <'a, Return> $trait_name<'a, Return> for Memo<(), fn() -> Return, Return>
+        where
+            Return: 'a + Copy,
+        {
+            fn new(f: fn() -> Return) -> Self {
+                Self {
+                    get_value: f,
+                    value: None,
+                    map: None
+                }
+            }
+
+            fn run(&mut self) -> Return {
+                match self.value {
+                    Some(value) => value,
+                    None => {
+                        let value = (self.get_value)();
+                        self.value = Some(value);
+                        value
+                    }
+                }
+            }
+        }
     };
 
     ($trait_name:ident -> $($let:ident => $type:ident);*) => {
@@ -28,6 +56,7 @@ macro_rules! create_memo_for {
             fn new(f: fn($($type),*) -> Return) -> Self {
                 Self {
                     get_value: f,
+                    value: None,
                     map: Some(HashMap::new())
                 }
             }
@@ -41,6 +70,7 @@ macro_rules! create_memo_for {
                     None => {
                         let value = (self.get_value)($(*$let),*);
                         map.insert(key, Box::new(value));
+                        self.value = Some(value);
                         value
                     }
                 }
@@ -49,7 +79,7 @@ macro_rules! create_memo_for {
     };
 }
 
-// create_memo_for!(Memo0 ->);
+create_memo_for!(Memo0);
 create_memo_for!(Memo1 -> arg1 => Arg1);
 create_memo_for!(Memo2 -> arg1 => Arg1; arg2 => Arg2);
 create_memo_for!(Memo3 -> arg1 => Arg1; arg2 => Arg2; arg3 => Arg3);
@@ -62,8 +92,9 @@ mod tests {
 
     #[test]
     fn it_memoizes_functions_for_i32() {
-        // let mut f0 = <Memo<_, _,_> as Memo0<_>>::new(|| 10);
-        // assert_eq!(f0.run(10), Some(10));
+        let f = || 10;
+        let mut f0 = <Memo<_, _, _> as Memo0<_>>::new(f);
+        assert_eq!(f0.run(), 10);
 
         let f = |a| a;
         let mut f1 = <Memo<_, _, _> as Memo1<_, _>>::new(f);
