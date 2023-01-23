@@ -5,11 +5,15 @@ pub struct Memo<Key, Function, Return>
 where
     Return: Copy,
 {
-    map: HashMap<Key, Box<Return>>,
+    map: Option<HashMap<Key, Box<Return>>>,
     get_value: Function,
 }
 
 macro_rules! create_memo_for {
+    ($trait_name:ident) => {
+        
+    };
+
     ($trait_name:ident -> $($let:ident => $type:ident);*) => {
         trait $trait_name<'a, $($type),*, Return> {
             fn new(f: fn($($type),*) -> Return) -> Self;
@@ -24,18 +28,19 @@ macro_rules! create_memo_for {
             fn new(f: fn($($type),*) -> Return) -> Self {
                 Self {
                     get_value: f,
-                    map: HashMap::new()
+                    map: Some(HashMap::new())
                 }
             }
 
             fn run(&mut self, $($let: &'a $type),*) -> Return {
                 let key = ($($let),*);
+                let map = self.map.as_mut().unwrap();
 
-                match self.map.get(&key) {
+                match map.get(&key) {
                     Some(value) => **value,
                     None => {
                         let value = (self.get_value)($(*$let),*);
-                        self.map.insert(key, Box::new(value));
+                        map.insert(key, Box::new(value));
                         value
                     }
                 }
@@ -44,6 +49,7 @@ macro_rules! create_memo_for {
     };
 }
 
+// create_memo_for!(Memo0 ->);
 create_memo_for!(Memo1 -> arg1 => Arg1);
 create_memo_for!(Memo2 -> arg1 => Arg1; arg2 => Arg2);
 create_memo_for!(Memo3 -> arg1 => Arg1; arg2 => Arg2; arg3 => Arg3);
