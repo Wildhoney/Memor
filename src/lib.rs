@@ -7,30 +7,36 @@ where
     pub value: Option<Return>,
 }
 
-impl<Arg1, Arg2, Return> Memo<fn(Arg1, Arg2) -> Return, Return>
-where
-    Arg1: Eq,
-    Arg2: Eq,
-    Return: Clone,
-{
-    pub fn new(f: fn(Arg1, Arg2) -> Return) -> Self {
-        Self {
-            get_value: f,
-            value: None,
-        }
-    }
+macro_rules! create_memo_impl {
+    () => {
+        impl<Arg1, Arg2, Return> Memo<fn(Arg1, Arg2) -> Return, Return>
+        where
+            Arg1: Eq,
+            Arg2: Eq,
+            Return: Clone,
+        {
+            pub fn new(f: fn(Arg1, Arg2) -> Return) -> Self {
+                Self {
+                    get_value: f,
+                    value: None,
+                }
+            }
 
-    pub fn run(&mut self, arg1: Arg1, arg2: Arg2) -> Option<Return> {
-        match self.value {
-            Some(_) => self.value.to_owned(),
-            None => {
-                let value = Some((self.get_value)(arg1, arg2));
-                self.value = value;
-                self.value.to_owned()
+            pub fn run(&mut self, arg1: Arg1, arg2: Arg2) -> Option<Return> {
+                match self.value {
+                    Some(_) => self.value.to_owned(),
+                    None => {
+                        let value = Some((self.get_value)(arg1, arg2));
+                        self.value = value;
+                        self.value.to_owned()
+                    }
+                }
             }
         }
-    }
+    };
 }
+
+create_memo_impl!();
 
 #[cfg(test)]
 mod tests {
