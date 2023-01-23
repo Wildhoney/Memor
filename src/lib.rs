@@ -16,7 +16,7 @@ macro_rules! create_memo_for {
             fn run(&mut self, $($let: $type),*) -> Return;
         }
 
-        impl <$($type),*, Return> $trait_name<$($type),*, Return> for Memo<i32, fn($($type),*) -> Return, Return>
+        impl <$($type),*, Return> $trait_name<$($type),*, Return> for Memo<(i32, i32), fn($($type),*) -> Return, Return>
         where
             $($type: Eq),*,
             Return: Clone,
@@ -29,11 +29,11 @@ macro_rules! create_memo_for {
             }
 
             fn run(&mut self, $($let: $type),*) -> Return {
-                match self.map.get(&(1 as i32)) {
+                match self.map.get(&(1, 1)) {
                     Some(value) => value.to_owned(),
                     None => {
                         let value = (self.get_value)($($let),*);
-                        self.map.insert(1 as i32, value.to_owned());
+                        self.map.insert((1, 1), value.to_owned());
                         value.to_owned()
                     }
                 }
