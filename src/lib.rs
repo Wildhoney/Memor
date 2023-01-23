@@ -1,11 +1,11 @@
 use std::{collections::HashMap, hash::Hash};
 
 #[derive(Debug)]
-pub struct Memo<'a, Key, Function, Return>
+pub struct Memo<Key, Function, Return>
 where
-    Return: 'a + Clone + Copy,
+    Return: Copy,
 {
-    map: HashMap<Key, &'a Return>,
+    map: HashMap<Key, Box<Return>>,
     get_value: Function,
 }
 
@@ -16,10 +16,10 @@ macro_rules! create_memo_for {
             fn run(&mut self, $($let: &'a $type),*) -> Return;
         }
 
-        impl <'a, $($type),*, Return> $trait_name<'a, $($type),*, Return> for Memo<'a, ($(&'a $type),*), fn($($type),*) -> Return, Return>
+        impl <'a, $($type),*, Return> $trait_name<'a, $($type),*, Return> for Memo<($(&'a $type),*), fn($($type),*) -> Return, Return>
         where
-            $($type: 'a + Eq + Hash + Clone + Copy),*,
-            Return: 'a + Clone + Copy,
+            $($type: 'a + Eq + Hash + Copy),*,
+            Return: 'a + Copy,
         {
             fn new(f: fn($($type),*) -> Return) -> Self {
                 Self {
@@ -35,7 +35,7 @@ macro_rules! create_memo_for {
                     Some(value) => **value,
                     None => {
                         let value = (self.get_value)($(*$let),*);
-                        // self.map.insert(key, &value);
+                        self.map.insert(key, Box::new(value));
                         value
                     }
                 }
