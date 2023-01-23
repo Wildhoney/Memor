@@ -7,7 +7,7 @@ where
     pub value: Option<Return>,
 }
 
-impl<'f, Arg1, Arg2, Return> Memo<fn(Arg1, Arg2) -> Return, Return>
+impl<Arg1, Arg2, Return> Memo<fn(Arg1, Arg2) -> Return, Return>
 where
     Arg1: Eq,
     Arg2: Eq,
