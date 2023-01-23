@@ -11,18 +11,18 @@ where
 }
 
 macro_rules! create_memo_for {
-    ($trait_name:ident -> $($lowercase:ident => $uppercase:ident);*) => {
-        trait $trait_name<$($uppercase),*, Return> {
-            fn new(f: fn($($uppercase),*) -> Return) -> Self;
-            fn run(&mut self, $($lowercase: $uppercase),*) -> Option<Return>;
+    ($trait_name:ident -> $($let:ident => $type:ident);*) => {
+        trait $trait_name<$($type),*, Return> {
+            fn new(f: fn($($type),*) -> Return) -> Self;
+            fn run(&mut self, $($let: $type),*) -> Option<Return>;
         }
 
-        impl <$($uppercase),*, Return> $trait_name<$($uppercase),*, Return> for Memo<fn($($uppercase),*) -> Return, Return>
+        impl <$($type),*, Return> $trait_name<$($type),*, Return> for Memo<fn($($type),*) -> Return, Return>
         where
-            $($uppercase: Eq),*,
+            $($type: Eq),*,
             Return: Clone,
         {
-            fn new(f: fn($($uppercase),*) -> Return) -> Self {
+            fn new(f: fn($($type),*) -> Return) -> Self {
                 Self {
                     get_value: f,
                     value: None,
@@ -30,11 +30,11 @@ macro_rules! create_memo_for {
                 }
             }
 
-            fn run(&mut self, $($lowercase: $uppercase),*) -> Option<Return> {
+            fn run(&mut self, $($let: $type),*) -> Option<Return> {
                 match self.value {
                     Some(_) => self.value.to_owned(),
                     None => {
-                        let value = (self.get_value)($($lowercase),*);
+                        let value = (self.get_value)($($let),*);
                         self.value = Some(value);
                         self.value.to_owned()
                     }
