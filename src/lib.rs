@@ -70,7 +70,6 @@ macro_rules! create_memo_for {
                     None => {
                         let value = (self.get_value)($(*$let),*);
                         map.insert(key, Box::new(value));
-                        self.value = Some(value);
                         value
                     }
                 }
