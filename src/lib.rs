@@ -1,8 +1,11 @@
+use std::collections::HashMap;
+
 #[derive(Debug)]
 pub struct Memo<Function, Return>
 where
     Return: Clone,
 {
+    map: HashMap<Function, Return>,
     get_value: Function,
     pub value: Option<Return>,
 }
@@ -23,6 +26,7 @@ macro_rules! create_memo_for {
                 Self {
                     get_value: f,
                     value: None,
+                    map: HashMap::new()
                 }
             }
 
@@ -30,8 +34,8 @@ macro_rules! create_memo_for {
                 match self.value {
                     Some(_) => self.value.to_owned(),
                     None => {
-                        let value = Some((self.get_value)($($lowercase),*));
-                        self.value = value;
+                        let value = (self.get_value)($($lowercase),*);
+                        self.value = Some(value);
                         self.value.to_owned()
                     }
                 }
