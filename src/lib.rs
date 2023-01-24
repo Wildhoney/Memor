@@ -10,7 +10,7 @@ where
     get_value: Function,
 }
 
-macro_rules! create_memo_for {
+macro_rules! create {
     ($trait_name:ident) => {
         trait $trait_name<'a, Return> {
             fn new(f: fn() -> Return) -> Self;
@@ -78,19 +78,29 @@ macro_rules! create_memo_for {
     };
 }
 
-create_memo_for!(Memo0);
-create_memo_for!(Memo1 -> arg1 => Arg1);
-create_memo_for!(Memo2 -> arg1 => Arg1; arg2 => Arg2);
-create_memo_for!(Memo3 -> arg1 => Arg1; arg2 => Arg2; arg3 => Arg3);
-create_memo_for!(Memo4 -> arg1 => Arg1; arg2 => Arg2; arg3 => Arg3; arg4 => Arg4);
-create_memo_for!(Memo5 -> arg1 => Arg1; arg2 => Arg2; arg3 => Arg3; arg4 => Arg4; arg5 => Arg5);
+create!(Memo0);
+create!(Memo1 -> arg1 => Arg1);
+create!(Memo2 -> arg1 => Arg1; arg2 => Arg2);
+create!(Memo3 -> arg1 => Arg1; arg2 => Arg2; arg3 => Arg3);
+create!(Memo4 -> arg1 => Arg1; arg2 => Arg2; arg3 => Arg3; arg4 => Arg4);
+create!(Memo5 -> arg1 => Arg1; arg2 => Arg2; arg3 => Arg3; arg4 => Arg4; arg5 => Arg5);
+
+#[macro_export]
+macro_rules! memo (
+    ($fn:expr) => { <Memo<_, _, _> as Memo0<_>>::new($fn) };
+    ($fn:expr => $arg1:tt) => { <Memo<_, _, _> as Memo1<$arg1, _>>::new($fn) };
+    ($fn:expr => $arg1:tt, $arg2:tt) => { <Memo<_, _, _> as Memo2<$arg1, $arg2, _>>::new($fn) };
+    ($fn:expr => $arg1:tt, $arg2:tt, $arg3:tt) => { <Memo<_, _, _> as Memo3<$arg1, $arg2, $arg3, _>>::new($fn) };
+    ($fn:expr => $arg1:tt, $arg2:tt, $arg3:tt, $arg4:tt) => { <Memo<_, _, _> as Memo4<$arg1, $arg2, $arg3, $arg4, _>>::new($fn) };
+    ($fn:expr => $arg1:tt, $arg2:tt, $arg3:tt, $arg4:tt, $arg5:tt) => { <Memo<_, _, _> as Memo5<$arg1, $arg2, $arg3, $arg4, $arg5 ,_>>::new($fn) };
+);
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn it_memoizes_functions_for_i32() {
+    fn it_memoizes_functions_for_struct() {
         let f = || 10;
         let mut f0 = <Memo<_, _, _> as Memo0<_>>::new(f);
         assert_eq!(f0.run(), 10);
@@ -117,6 +127,38 @@ mod tests {
 
         let f = |a, b, c, d, e| a * b * c * d * e;
         let mut f5 = <Memo<_, _, _> as Memo5<_, _, _, _, _, _>>::new(f);
+        assert_eq!(f5.run(&10, &10, &10, &10, &10), 100_000);
+        assert_eq!(f5.run(&20, &20, &20, &20, &20), 3_200_000);
+    }
+
+    #[test]
+    fn it_memoizes_functions_for_macro() {
+        let f = || 10;
+        let mut f0 = memo!(f);
+        assert_eq!(f0.run(), 10);
+
+        let f = |a| a;
+        let mut f1 = memo!(f => i32);
+        assert_eq!(f1.run(&10), 10);
+        assert_eq!(f1.run(&20), 20);
+
+        let f = |a, b| a * b;
+        let mut f2 = memo!(f => i32, i32);
+        assert_eq!(f2.run(&10, &10), 100);
+        assert_eq!(f2.run(&20, &20), 400);
+
+        let f = |a, b, c| a * b * c;
+        let mut f3 = memo!(f => i32, i32, i32);
+        assert_eq!(f3.run(&10, &10, &10), 1_000);
+        assert_eq!(f3.run(&20, &20, &20), 8_000);
+
+        let f = |a, b, c, d| a * b * c * d;
+        let mut f4 = memo!(f => i32, i32, i32, i32);
+        assert_eq!(f4.run(&10, &10, &10, &10), 10_000);
+        assert_eq!(f4.run(&20, &20, &20, &20), 160_000);
+
+        let f = |a, b, c, d, e| a * b * c * d * e;
+        let mut f5 = memo!(f => i32, i32, i32, i32, i32);
         assert_eq!(f5.run(&10, &10, &10, &10, &10), 100_000);
         assert_eq!(f5.run(&20, &20, &20, &20, &20), 3_200_000);
     }
