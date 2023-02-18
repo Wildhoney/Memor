@@ -48,7 +48,7 @@ macro_rules! create {
             fn run(&mut self, $($let: &'a $type),*) -> Return;
         }
 
-        impl <'a, $($type),*, Return> $trait_name<'a, $($type),*, Return> for Memo<($(&'a $type),*), fn($($type),*) -> Return, Return>
+        impl <'a, $($type),*, Return> $trait_name<'a, $($type),*, Return> for Memo<($(&'a $type),*,), fn($($type),*) -> Return, Return>
         where
             $($type: 'a + Eq + Hash + Copy),*,
             Return: 'a + Copy,
@@ -62,7 +62,7 @@ macro_rules! create {
             }
 
             fn run(&mut self, $($let: &'a $type),*) -> Return {
-                let key = ($($let),*);
+                let key = ($($let),*,);
                 let map = self.map.as_mut().unwrap();
 
                 match map.get(&key) {
